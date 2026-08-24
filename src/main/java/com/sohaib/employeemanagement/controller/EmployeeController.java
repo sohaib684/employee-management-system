@@ -2,6 +2,7 @@ package com.sohaib.employeemanagement.controller;
 
 import com.sohaib.employeemanagement.dto.EmployeeRequestDto;
 import com.sohaib.employeemanagement.dto.EmployeeResponseDto;
+import com.sohaib.employeemanagement.service.EmailService;
 import com.sohaib.employeemanagement.service.EmployeeService;
 import com.sohaib.employeemanagement.service.FileStorageService;
 import org.springframework.data.domain.Page;
@@ -25,13 +26,16 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
     private final FileStorageService fileStorageService;
+    private final EmailService emailService;
 
     public EmployeeController(
             EmployeeService employeeService,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService,
+            EmailService emailService) {
 
         this.employeeService = employeeService;
         this.fileStorageService = fileStorageService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/search")
@@ -170,7 +174,16 @@ public class EmployeeController {
                     .build();
         }
     }
+    @PostMapping("/test-email")
+    public ResponseEntity<String> testEmail() {
 
+        emailService.sendWelcomeEmail(
+                "sohaibalam27022001@gmail.com",
+                "Sohaib Alam"
+        );
+
+        return ResponseEntity.ok("Email sent successfully");
+    }
     // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployee(
