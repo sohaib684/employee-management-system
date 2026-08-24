@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -112,6 +113,32 @@ public class EmployeeController {
                 );
 
         return ResponseEntity.ok(updatedEmployee);
+    }
+    // UPLOAD PROFILE IMAGE
+    @PostMapping(
+            value = "/{id}/profile-image",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<String> uploadProfileImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+
+        try {
+
+            employeeService.uploadProfileImage(id, file);
+
+            return ResponseEntity.ok(
+                    "Profile image uploaded successfully"
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to upload profile image: " + e.getMessage());
+        }
     }
 
     // DELETE
