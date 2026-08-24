@@ -6,13 +6,18 @@ import com.sohaib.employeemanagement.entity.Employee;
 import com.sohaib.employeemanagement.exception.EmployeeNotFoundException;
 import com.sohaib.employeemanagement.repository.EmployeeRepository;
 import com.sohaib.employeemanagement.service.EmployeeService;
+import com.sohaib.employeemanagement.service.FileStorageService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.util.List;
 
@@ -20,13 +25,20 @@ import java.util.List;
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
+    private final FileStorageService fileStorageService;
+
     private static final Logger log =
             LoggerFactory.getLogger(EmployeeServiceImpl.class);
 
 
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+    public EmployeeServiceImpl(
+            EmployeeRepository employeeRepository,
+            FileStorageService fileStorageService) {
+
         this.employeeRepository = employeeRepository;
+        this.fileStorageService = fileStorageService;
     }
+
 
     // =========================
     // CREATE EMPLOYEE
@@ -67,11 +79,11 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() ->
                         new EmployeeNotFoundException(
-                                "Employee not found with id: " + id
+                                "Employees not found with id: " + id
                         )
                 );
 
-        log.info("Employee found with id: {}", id);
+        log.info("Employees found with id: {}", id);
 
         return convertToResponseDto(employee);
     }
@@ -102,7 +114,8 @@ public class EmployeeServiceImpl implements EmployeeService {
                         PageRequest.of(page, size, sort)
                 );
 
-        log.info("Fetched {} employees", employees.getNumberOfElements());
+        log.info("Fetched {} employees",
+                employees.getNumberOfElements());
 
         return employees.map(this::convertToResponseDto);
     }
@@ -161,9 +174,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         log.info("Employee deleted successfully with id: {}", id);
     }
+
+
+    // =========================
+    // SEARCH EMPLOYEES
+    // =========================
+
     @Override
     public Page<EmployeeResponseDto> searchEmployees(
-
             String name,
             String department,
             String city,
@@ -171,9 +189,14 @@ public class EmployeeServiceImpl implements EmployeeService {
             int size,
             String sortBy,
             String direction) {
+
         log.info(
-                "Searching employees - name: {}, department: {}, city: {} ,page: {}, size: {}",
-                name, department, city , page, size
+                "Searching employees - name: {}, department: {}, city: {}, page: {}, size: {}",
+                name,
+                department,
+                city,
+                page,
+                size
         );
 
         Sort sort = direction.equalsIgnoreCase("desc")
@@ -201,14 +224,15 @@ public class EmployeeServiceImpl implements EmployeeService {
                             pageable
                     );
 
-        }
-        else if (city != null && !city.isBlank()) {
+        } else if (city != null && !city.isBlank()) {
 
-            employees = employeeRepository
-                    .findByCityIgnoreCase(city, pageable);
+            employees =
+                    employeeRepository.findByCityIgnoreCase(
+                            city,
+                            pageable
+                    );
 
-        }
-        else {
+        } else {
 
             employees =
                     employeeRepository.findAll(pageable);
@@ -217,13 +241,65 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employees.map(this::convertToResponseDto);
     }
 
+
+    // =========================
+    // UPLOAD PROFILE IMAGE
+    // =========================
+
+    @Override
+    public void uploadProfileImage(
+            Long employeeId,
+            MultipartFile file) throws IOException {
+
+        log.info(
+                "Uploading profile image for employee id: {}",
+                employeeId
+        );
+
+        // Step 1: Verify employee exists
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() ->
+                        new EmployeeNotFoundException(
+                                "Employee not found with id: " + employeeId
+                        )
+                );
+
+        // Step 2: Store the file
+        String filePath =
+                fileStorageService.storeFile(employeeId, file);
+
+        // Step 3: Save file information in Employee entity
+        employee.setProfileImageName(
+                file.getOriginalFilename()
+        );
+
+        employee.setProfileImageType(
+                file.getContentType()
+        );
+
+        employee.setProfileImagePath(
+                filePath
+        );
+
+        // Step 4: Save updated employee
+        employeeRepository.save(employee);
+
+        log.info(
+                "Profile image uploaded successfully for employee id: {}",
+                employeeId
+        );
+    }
+
+
     // =========================
     // ENTITY → RESPONSE DTO
     // =========================
 
-    private EmployeeResponseDto convertToResponseDto(Employee employee) {
+    private EmployeeResponseDto convertToResponseDto(
+            Employee employee) {
 
-        EmployeeResponseDto dto = new EmployeeResponseDto();
+        EmployeeResponseDto dto =
+                new EmployeeResponseDto();
 
         dto.setId(employee.getId());
         dto.setName(employee.getName());
