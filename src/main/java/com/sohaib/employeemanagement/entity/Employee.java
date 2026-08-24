@@ -6,7 +6,6 @@ import lombok.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "employees")
 public class Employee {
 
     @Id
@@ -22,4 +21,10 @@ public class Employee {
     private String city;
 
     private Double salary;
+
+    private String profileImageName;
+
+    private String profileImageType;
+
+    private String profileImagePath;
 }
