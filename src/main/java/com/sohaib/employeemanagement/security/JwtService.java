@@ -11,15 +11,16 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.function.Function;
+import com.sohaib.employeemanagement.config.JwtProperties;
 
 @Service
 public class JwtService {
 
     private final SecretKey key;
 
-    public JwtService(@Value("${jwt.secret}") String secret) {
+    public JwtService(JwtProperties jwtProperties) {
         this.key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
+                jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)
         );
     }
 
