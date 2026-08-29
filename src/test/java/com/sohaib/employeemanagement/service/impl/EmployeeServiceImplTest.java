@@ -4,6 +4,8 @@ import com.sohaib.employeemanagement.entity.Employee;
 import com.sohaib.employeemanagement.dto.EmployeeResponseDto;
 import com.sohaib.employeemanagement.repository.EmployeeRepository;
 import com.sohaib.employeemanagement.service.FileStorageService;
+import com.sohaib.employeemanagement.exception.EmployeeNotFoundException;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,20 @@ class EmployeeServiceImplTest {
 
     @InjectMocks
     private EmployeeServiceImpl employeeService;
+
+    @Test
+    void getEmployeeById_shouldThrowException_whenEmployeeNotFound() {
+
+        // Arrange
+        when(employeeRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThrows(
+                EmployeeNotFoundException.class,
+                () -> employeeService.getEmployeeById(99L)
+        );
+    }
 
     @Test
     void getEmployeeById_shouldReturnEmployee() {
