@@ -6,6 +6,10 @@ import com.sohaib.employeemanagement.repository.EmployeeRepository;
 import com.sohaib.employeemanagement.service.FileStorageService;
 import com.sohaib.employeemanagement.exception.EmployeeNotFoundException;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.sohaib.employeemanagement.dto.EmployeeRequestDto;
+
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +47,40 @@ class EmployeeServiceImplTest {
                 EmployeeNotFoundException.class,
                 () -> employeeService.getEmployeeById(99L)
         );
+    }
+    @Test
+    void saveEmployee_shouldSaveEmployee() {
+
+        // Arrange
+        EmployeeRequestDto request = new EmployeeRequestDto();
+
+        request.setName("Rahul");
+        request.setEmail("rahul@example.com");
+        request.setDepartment("IT");
+        request.setCity("Bangalore");
+        request.setSalary(60000.0);
+
+        Employee savedEmployee = new Employee();
+
+        savedEmployee.setId(2L);
+        savedEmployee.setName("Rahul");
+        savedEmployee.setEmail("rahul@example.com");
+        savedEmployee.setDepartment("IT");
+        savedEmployee.setCity("Bangalore");
+        savedEmployee.setSalary(60000.0);
+
+        when(employeeRepository.save(any(Employee.class)))
+                .thenReturn(savedEmployee);
+
+        // Act
+        EmployeeResponseDto result =
+                employeeService.saveEmployee(request);
+
+        // Assert
+        assertEquals(2L, result.getId());
+        assertEquals("Rahul", result.getName());
+
+        verify(employeeRepository).save(any(Employee.class));
     }
 
     @Test
